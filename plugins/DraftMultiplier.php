@@ -2,7 +2,7 @@
 
 class DraftMultiplier extends phplistPlugin {
     public $name = 'DraftMultiplier';
-    public $version = '1.0.8';
+    public $version = '1.0.9';
     public $authors = 'bucto';
     public $enabled = true;
 
