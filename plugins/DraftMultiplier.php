@@ -2,14 +2,13 @@
 
 class DraftMultiplier extends phplistPlugin
 {
-    /* Hier steht jetzt nur noch DraftMultiplier */
-    public $name = 'DraftMultiplier'; 
-    
-    public $version = '1.0.3';
+    public $name = 'DraftMultiplier';
+    public $version = '1.0.4';
     public $authors = 'bucto';
     public $enabled = true;
     public $description = 'Vervielfältigt Entwürfe für Massentests.';
 
+    /* RSS-Manager Methode für das Menü */
     public $topMenuLinks = array(
         'multiplier' => array('category' => 'system'),
     );
@@ -20,6 +19,7 @@ class DraftMultiplier extends phplistPlugin
 
     function __construct()
     {
+        // Wir setzen den Pfad explizit auf das Verzeichnis, in dem diese Datei liegt
         $this->coderoot = dirname(__FILE__) . '/';
         parent::__construct();
     }
@@ -29,7 +29,20 @@ class DraftMultiplier extends phplistPlugin
         if ($page == 'multiplier') {
             echo '<div class="container-fluid">';
             echo '<h1>' . s('Draft Multiplier Tool') . '</h1>';
-            echo '<p>' . s('Die Anzeige wurde aktualisiert.') . '</p>';
+            echo '<p>' . s('Das Plugin ist bereit zum Kopieren.') . '</p>';
+            
+            // Test-Abfrage der Entwürfe
+            $req = Sql_Query(sprintf(
+                'SELECT id, subject FROM %s WHERE status = "draft" ORDER BY entered DESC LIMIT 10',
+                $GLOBALS['tables']['message']
+            ));
+            
+            echo '<ul>';
+            while ($row = Sql_Fetch_Assoc($req)) {
+                echo '<li>' . $row['id'] . ': ' . htmlspecialchars($row['subject']) . '</li>';
+            }
+            echo '</ul>';
+            
             echo '</div>';
             return true;
         }
