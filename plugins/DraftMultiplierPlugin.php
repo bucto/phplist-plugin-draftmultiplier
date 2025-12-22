@@ -1,13 +1,15 @@
 <?php
 
-class DraftMultiplierPlugin extends phplistPlugin // Muss zum Dateinamen passen!
+class DraftMultiplierPlugin extends phplistPlugin
 {
-    public $name = 'Draft Multiplier Tool';
-    public $version = '1.0.0';
+    /* Hier steht jetzt nur noch DraftMultiplier */
+    public $name = 'DraftMultiplier'; 
+    
+    public $version = '1.0.2';
     public $authors = 'bucto';
     public $enabled = true;
+    public $description = 'Vervielfältigt Entwürfe für Massentests.';
 
-    /* Deine bewährte RSS-Technik für das Menü */
     public $topMenuLinks = array(
         'multiplier' => array('category' => 'system'),
     );
@@ -18,8 +20,6 @@ class DraftMultiplierPlugin extends phplistPlugin // Muss zum Dateinamen passen!
 
     function __construct()
     {
-        // Da die Datei jetzt im /plugins/ Ordner liegt, 
-        // findet dirname(__FILE__) den Pfad automatisch richtig.
         $this->coderoot = dirname(__FILE__) . '/';
         parent::__construct();
     }
@@ -29,9 +29,7 @@ class DraftMultiplierPlugin extends phplistPlugin // Muss zum Dateinamen passen!
         if ($page == 'multiplier') {
             echo '<div class="container-fluid">';
             echo '<h1>' . s('Draft Multiplier Tool') . '</h1>';
-            echo '<p>' . s('Willkommen im neuen, sauberen Plugin-Repo!') . '</p>';
-            
-            // Hier kommt später die Tabellen-Abfrage rein
+            echo '<p>' . s('Die Anzeige wurde aktualisiert.') . '</p>';
             echo '</div>';
             return true;
         }
