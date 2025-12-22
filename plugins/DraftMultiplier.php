@@ -1,8 +1,7 @@
 <?php
-
 class DraftMultiplier extends phplistPlugin {
     public $name = 'DraftMultiplier';
-    public $version = '1.0.9';
+    public $version = '1.1.1';
     public $authors = 'bucto';
     public $enabled = true;
 
@@ -11,14 +10,11 @@ class DraftMultiplier extends phplistPlugin {
     );
 
     public $pageTitles = array(
-        'multiplier' => 'Draft Multiplier Tool',
+        'multiplier' => 'Draft Multiplier Pro',
     );
 
     function __construct() {
-        // WICHTIG: Coderoot muss auf den Unterordner zeigen
         $this->coderoot = dirname(__FILE__) . '/DraftMultiplier/';
         parent::__construct();
     }
-    
-    // Wir lassen display() hier weg, damit phpList in den Unterordner schaut
 }

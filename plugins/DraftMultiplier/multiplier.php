@@ -1,72 +1,77 @@
 <?php
 if (!defined('PHPLISTINIT')) die();
 
-// 1. Logik zum Kopieren (wenn das Formular abgeschickt wurde)
-if (isset($_POST['copy_draft']) && isset($_POST['draft_id'])) {
-    $original_id = intval($_POST['draft_id']);
-    $count = intval($_POST['copy_count']);
+echo '<div class="container-fluid"><h1>Draft Multiplier Pro</h1>';
+
+// --- LOGIK: KOPIEREN AUSFÜHREN ---
+if (isset($_POST['run_multiplier']) && isset($_POST['selected_ids']) && isset($_POST['draft_id'])) {
+    $draft_id = intval($_POST['draft_id']);
+    $selected_ids = $_POST['selected_ids']; // Array der IDs aus der Tabelle
     
-    // Wir holen uns die Daten des Originals
-    $original = Sql_Fetch_Assoc_Query(sprintf(
-        'SELECT * FROM %s WHERE id = %d',
-        $GLOBALS['tables']['message'], $original_id
-    ));
-
+    $original = Sql_Fetch_Assoc_Query(sprintf('SELECT * FROM %s WHERE id = %d', $GLOBALS['tables']['message'], $draft_id));
+    
     if ($original) {
-        for ($i = 1; $i <= $count; $i++) {
-            // Wir erstellen eine Kopie (ID entfernen, Betreff anpassen)
+        $count = 0;
+        foreach ($selected_ids as $id) {
+            $data = Sql_Fetch_Assoc_Query("SELECT name, footer, email FROM Draft_Multiplier_Data WHERE id = " . intval($id));
+            
             $copy = $original;
-            unset($copy['id']); 
-            $copy['subject'] = $original['subject'] . " (Kopie $i)";
+            unset($copy['id']);
+            $copy['subject'] = $data['name'] . " - " . $original['subject'];
+            // Wir ersetzen einen Platzhalter [FOOTER] oder hängen ihn einfach an
+            $copy['message'] = $original['message'] . "\n\n" . $data['footer'];
             $copy['entered'] = date('Y-m-d H:i:s');
-            $copy['modified'] = date('Y-m-d H:i:s');
-            $copy['status'] = 'draft'; // Sicherstellen, dass es ein Entwurf bleibt
-
-            // In die Datenbank schreiben
+            
             $cols = array_keys($copy);
             $vals = array_map(function($v) { return "'" . sql_escape($v) . "'"; }, array_values($copy));
-            
-            Sql_Query(sprintf(
-                'INSERT INTO %s (%s) VALUES (%s)',
-                $GLOBALS['tables']['message'], implode(',', $cols), implode(',', $vals)
-            ));
+            Sql_Query(sprintf('INSERT INTO %s (%s) VALUES (%s)', $GLOBALS['tables']['message'], implode(',', $cols), implode(',', $vals)));
+            $count++;
         }
-        echo '<div class="note">' . $count . ' Kopie(n) von "' . htmlspecialchars($original['subject']) . '" wurden erstellt.</div>';
+        echo "<div class='note'>HURRA: $count personalisierte Entwürfe wurden erstellt!</div>";
     }
 }
 
-// 2. Anzeige der Tabelle mit Auswahlmöglichkeit
-echo '<div class="container-fluid">';
-echo '<div class="panel"><div class="content">';
-echo '<h3>' . s('Entwurf auswählen und vervielfältigen') . '</h3>';
+// --- ANZEIGE: FORMULAR ---
+echo '<form method="post" id="multiplierForm">';
 
-$req = Sql_Query(sprintf(
-    'SELECT id, subject FROM %s WHERE status = "draft" ORDER BY entered DESC',
-    $GLOBALS['tables']['message']
-));
+// 1. Entwurf-Auswahl
+echo '<div class="panel"><div class="content"><h3>1. Basis-Entwurf wählen</h3>';
+$drafts = Sql_Query(sprintf('SELECT id, subject FROM %s WHERE status = "draft" ORDER BY id DESC', $GLOBALS['tables']['message']));
+echo '<select name="draft_id" style="width:100%; max-width:500px;">';
+while($d = Sql_Fetch_Assoc($drafts)) echo "<option value='{$d['id']}'>[ID {$d['id']}] {$d['subject']}</option>";
+echo '</select></div></div>';
 
-if (Sql_Affected_Rows($req)) {
-    echo '<form method="post" action="">';
-    echo '<table class="common">';
-    echo '<thead><tr><th>Auswahl</th><th>ID</th><th>Betreff</th></tr></thead>';
-    while ($row = Sql_Fetch_Assoc($req)) {
-        echo '<tr>';
-        echo '<td><input type="radio" name="draft_id" value="' . $row['id'] . '" required></td>';
-        echo '<td>' . $row['id'] . '</td>';
-        echo '<td>' . htmlspecialchars($row['subject']) . '</td>';
-        echo '</tr>';
-    }
-    echo '</table>';
+// 2. Empfänger-Auswahl mit Checkboxen
+echo '<div class="panel"><div class="content"><h3>2. Empfänger wählen</h3>';
+echo '<button type="button" onclick="toggleAll(true)" class="btn">Alle auswählen</button> ';
+echo '<button type="button" onclick="toggleAll(false)" class="btn">Auswahl aufheben</button><br><br>';
 
-    echo '<div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ccc;">';
-    echo '<label>Anzahl der Kopien: </label>';
-    echo '<input type="number" name="copy_count" value="1" min="1" max="50" style="width: 60px; margin-right: 10px;">';
-    echo '<input type="submit" name="copy_draft" value="Vervielfältigen" class="btn btn-primary">';
-    echo '</div>';
-    echo '</form>';
-} else {
-    echo '<p>Keine Entwürfe gefunden.</p>';
+$res = Sql_Query("SELECT * FROM Draft_Multiplier_Data ORDER BY name ASC");
+echo '<table class="common">
+        <thead><tr><th></th><th>Name</th><th>Email</th><th>Footer Vorschau</th></tr></thead>
+        <tbody>';
+while ($row = Sql_Fetch_Assoc($res)) {
+    echo "<tr>
+            <td><input type='checkbox' name='selected_ids[]' value='{$row['id']}' class='rec-check'></td>
+            <td>{$row['name']}</td>
+            <td>{$row['email']}</td>
+            <td><small>".htmlspecialchars(substr($row['footer'], 0, 50))."...</small></td>
+          </tr>";
 }
+echo '</tbody></table>';
 
-echo '</div></div>';
+echo '<br><input type="submit" name="run_multiplier" value="Markierte Entwürfe erstellen" class="btn btn-primary" style="background-color: #2c3e50; color: white; padding: 10px 20px;">';
+echo '</div></div></form>';
+
+// JavaScript für Select/Deselect All
+echo "
+<script>
+function toggleAll(source) {
+    checkboxes = document.getElementsByClassName('rec-check');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = source;
+    }
+}
+</script>";
+
 echo '</div>';
