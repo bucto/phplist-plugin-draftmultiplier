@@ -2,13 +2,11 @@
 
 class DraftMultiplier extends phplistPlugin
 {
-    public $name = 'DraftMultiplier'; // Das wird in der Liste angezeigt
-    public $version = '1.0.5';
+    public $name = 'DraftMultiplier';
+    public $version = '1.0.6';
     public $authors = 'bucto';
     public $enabled = true;
-    public $description = 'Vervielfältigt Entwürfe für Massentests.';
 
-    /* Diese Struktur hat bei Drafttest funktioniert */
     public $topMenuLinks = array(
         'multiplier' => array('category' => 'system'),
     );
@@ -19,30 +17,21 @@ class DraftMultiplier extends phplistPlugin
 
     function __construct()
     {
+        // Wir setzen den Pfad absolut sicher
         $this->coderoot = dirname(__FILE__) . '/';
         parent::__construct();
     }
 
-    /* Falls topMenuLinks klemmt, fängt adminmenu es ab */
-    function adminmenu()
-    {
-        return array(
-            'multiplier' => 'Draft Multiplier Tool'
-        );
-    }
-
     function display($page)
     {
+        // Hier prüfen wir, ob phpList die Seite 'multiplier' aufruft
         if ($page == 'multiplier') {
             echo '<div class="container-fluid">';
             echo '<h1>' . s('Draft Multiplier Tool') . '</h1>';
-            echo '<p>' . s('Menüpunkt erfolgreich wiederhergestellt!') . '</p>';
+            echo '<p>Erfolg! Die Seite wurde gefunden.</p>';
             
-            // Kleine Vorschau der Entwürfe zur Kontrolle
-            $req = Sql_Query(sprintf('SELECT id, subject FROM %s WHERE status = "draft" LIMIT 5', $GLOBALS['tables']['message']));
-            while ($row = Sql_Fetch_Assoc($req)) {
-                echo '<li>' . htmlspecialchars($row['subject']) . '</li>';
-            }
+            // Zeige uns zur Sicherheit an, wo phpList gerade sucht
+            echo '<p>Coderoot: ' . $this->coderoot . '</p>';
             
             echo '</div>';
             return true;
