@@ -1,11 +1,11 @@
 <?php
 
-class DraftMultiplierPlugin extends phplistPlugin
+class DraftMultiplier extends phplistPlugin
 {
     /* Hier steht jetzt nur noch DraftMultiplier */
     public $name = 'DraftMultiplier'; 
     
-    public $version = '1.0.2';
+    public $version = '1.0.3';
     public $authors = 'bucto';
     public $enabled = true;
     public $description = 'Vervielfältigt Entwürfe für Massentests.';
