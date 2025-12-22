@@ -15,18 +15,32 @@ A powerful **phpList** plugin designed to rapidly duplicate a base campaign draf
 
 1.  In your phpList admin area, navigate to **System** -> **Manage Plugins**.
 2.  Copy and paste the following URL into the "Install a new plugin" field:
-    `https://github.com/bucto/phplist-plugin-draftmultiplier/archive/refs/heads/main.zip`
+    `https://github.com/bucto/phplist-plugin-draftmultiplier/archive/master.zip`
 3.  Click **Install**.
-4.  Ensure the plugin is enabled in the list (green bulb icon).
+4.  Ensure the plugin is enabled in the list.
 
-## Prerequisites
 
-The plugin requires a specific database table to store recipient data. Create this table (e.g., via phpMyAdmin) in your phpList database:
+## How to Use
 
-```sql
-CREATE TABLE IF NOT EXISTS Draft_Multiplier_Data (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
-    footer TEXT
-);
+### 1. Preparing Recipient Data
+Before multiplying, you need to add recipients to the plugin's database:
+1. Navigate to **System** -> **Draft Multiplier: Manage Recipients**.
+2. Use the form to add a **Name** (will be prepended to the subject), an **Email** (for reference), and an **Individual Footer**.
+3. You can **Edit** or **Delete** existing entries in the list below the form.
+
+### 2. Creating Personalized Copies
+Once your recipients are set up:
+1. Create a standard **Campaign Draft** in phpList as your template.
+2. Navigate to **System** -> **Draft Multiplier: Create Copies**.
+3. **Select Base Draft:** Choose your template from the dropdown menu.
+4. **Select Recipients:** Use the checkboxes to pick the people you want a copy for. Use "Select All" for bulk actions.
+5. **Process:** Click **Create Marked Drafts**.
+6. **Result:** Check **Campaigns** -> **List of Drafts**. You will find new drafts named `[Name] - [Original Subject]` with the individual footer appended to the message.
+
+## Menu Structure
+
+* **Draft Multiplier: Create Copies**: The main tool for generating campaigns.
+* **Draft Multiplier: Manage Recipients**: The management area for your personalization data.
+
+## Author
+* **bucto** - *Initial development*
