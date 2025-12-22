@@ -3,7 +3,7 @@
 class DraftMultiplier extends phplistPlugin
 {
     public $name = 'DraftMultiplier';
-    public $version = '1.1.2';
+    public $version = '1.1.3';
     public $authors = 'bucto';
     public $enabled = true;
     public $description = 'Automatically creates the required database table on installation.';
