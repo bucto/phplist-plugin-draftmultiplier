@@ -96,6 +96,6 @@ function toggleAll(selectAll) {
 </div>';
 
 echo '<hr><div style="text-align: center; color: #666; font-size: 0.9em; padding: 20px;">';
-echo 'Plugin developed by <strong>bucto</strong> | ';
+echo 'Plugin developed by <strong>Thomas Bücken</strong> | ';
 echo '<a href="https://github.com/bucto/phplist-plugin-draftmultiplier" target="_blank" style="text-decoration: none; color: #007bff;">GitHub Project Page</a>';
 echo '</div>';
