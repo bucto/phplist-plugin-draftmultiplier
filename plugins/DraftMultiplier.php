@@ -3,7 +3,7 @@
 class DraftMultiplier extends phplistPlugin
 {
     public $name = 'DraftMultiplier';
-    public $version = '1.1.7';
+    public $version = '1.1.8';
     public $authors = 'bucto';
     public $enabled = true;
     public $description = 'Pro tool to duplicate campaign drafts with individual personalization.';

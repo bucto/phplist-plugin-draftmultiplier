@@ -1,7 +1,7 @@
 <?php
 if (!defined('PHPLISTINIT')) die();
 
-echo '<div class="container-fluid">';
+echo '<div class="container-fluid"><h1>Draft Multiplier: Create Copies</h1>';
 
 // --- LOGIK: KOPIEREN AUSFÜHREN ---
 if (isset($_POST['run_multiplier']) && isset($_POST['selected_ids']) && isset($_POST['draft_id'])) {
@@ -14,54 +14,41 @@ if (isset($_POST['run_multiplier']) && isset($_POST['selected_ids']) && isset($_
     if ($original) {
         $count = 0;
         foreach ($selected_ids as $id) {
-            // Empfänger-Daten aus der Plugin-Tabelle holen
-            $data = Sql_Fetch_Assoc_Query("SELECT name, footer, email FROM Draft_Multiplier_Data WHERE id = " . intval($id));
+            // Empfänger-Daten aus deiner Tabelle Draft_Multiplier_Data
+            $data = Sql_Fetch_Assoc_Query(sprintf("SELECT name, email, footer FROM Draft_Multiplier_Data WHERE id = %d", intval($id)));
             
             if ($data) {
-                $copy = $original;
-                unset($copy['id']); // ID entfernen, damit MySQL eine neue vergibt
+                // Betreff und Absender vorbereiten
+                $subject = sql_escape($data['name'] . " - " . $original['subject']);
+                $fromline = sql_escape($data['name'] . ' <' . $data['email'] . '>');
                 
-                // 1. Betreff personalisieren
-                $copy['subject'] = $data['name'] . " - " . $original['subject'];
-                
-                // 2. Absender (From Line) mit Name & Email aus deiner Tabelle setzen
-                $copy['fromline'] = sprintf('%s <%s>', $data['name'], $data['email']);
-                
-                // 3. Footer anhängen (HTML Erkennung)
-                // Prüfen ob die Nachricht HTML-Tags enthält
+                // Footer-Logik (HTML vs Plain Text)
                 $isHtml = (strip_tags($original['message']) != $original['message']);
-                
                 if ($isHtml) {
-                    $footer_content = '<br><br><hr><br>' . nl2br(htmlspecialchars($data['footer']));
-                    $copy['message'] = $original['message'] . $footer_content;
+                    $message = sql_escape($original['message'] . '<br><br><hr><br>' . nl2br(htmlspecialchars($data['footer'])));
                 } else {
-                    $footer_content = "\n\n---\n" . $data['footer'];
-                    $copy['message'] = $original['message'] . $footer_content;
+                    $message = sql_escape($original['message'] . "\n\n---\n" . $data['footer']);
                 }
-                
-                // Zeitstempel und Status sicherstellen
-                $copy['entered'] = date('Y-m-d H:i:s');
-                $copy['modified'] = date('Y-m-d H:i:s');
-                $copy['status'] = 'draft'; 
 
-                // SQL Query zum Einfügen aufbauen
-                $cols = array_keys($copy);
-                $vals = array_map(function($v) { 
-                    if ($v === null) return "NULL";
-                    return "'" . sql_escape($v) . "'"; 
-                }, array_values($copy));
-                
+                // Den neuen Entwurf einfügen
+                // Wir setzen alle kritischen phpList-Felder auf sichere Standardwerte
                 Sql_Query(sprintf(
-                    'INSERT INTO %s (%s) VALUES (%s)',
-                    $GLOBALS['tables']['message'], 
-                    implode(',', $cols), 
-                    implode(',', $vals)
+                    'INSERT INTO %s (subject, fromline, message, entered, modified, status, template, messageformat, embargo, repeatinterval, repeatuntil, footer) 
+                     VALUES ("%s", "%s", "%s", NOW(), NOW(), "draft", %d, "%s", NOW(), 0, NOW(), "%s")',
+                    $GLOBALS['tables']['message'],
+                    $subject,
+                    $fromline,
+                    $message,
+                    intval($original['template']),
+                    sql_escape($original['messageformat']),
+                    sql_escape($original['footer']) // Dies ist der systemweite Footer von phpList
                 ));
+                
                 $count++;
             }
         }
-        echo "<div class='note' style='background-color: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 20px;'>
-                ✅ <strong>Success:</strong> $count personalized drafts have been created!
+        echo "<div class='note' style='background-color: #d4edda; color: #155724; padding: 15px; border: 1px solid #c3e6cb; margin: 20px 0;'>
+                ✅ <strong>Success:</strong> $count personalized drafts created!
               </div>";
     }
 }
@@ -71,54 +58,46 @@ echo '<form method="post" id="multiplierForm">';
 
 // 1. Entwurf-Auswahl
 echo '<div class="panel"><div class="content"><h3>1. Select Base Draft</h3>';
-$drafts = Sql_Query(sprintf('SELECT id, subject FROM %s WHERE status = "draft" ORDER BY id DESC', $GLOBALS['tables']['message']));
-echo '<select name="draft_id" style="width:100%; max-width:600px; padding: 8px; border: 1px solid #ccc;">';
+$drafts = Sql_Query(sprintf('SELECT id, subject FROM %s WHERE status = "draft" ORDER BY id DESC LIMIT 50', $GLOBALS['tables']['message']));
+echo '<select name="draft_id" style="width:100%; max-width:600px; padding: 8px;">';
 while($d = Sql_Fetch_Assoc($drafts)) {
     echo "<option value='{$d['id']}'>[ID {$d['id']}] " . htmlspecialchars($d['subject']) . "</option>";
 }
 echo '</select></div></div>';
 
-// 2. Empfänger-Auswahl mit Checkboxen
+// 2. Empfänger-Auswahl
 echo '<div class="panel"><div class="content"><h3>2. Select Recipients</h3>';
-echo '<div style="margin-bottom: 10px;">';
-echo '<button type="button" onclick="toggleAll(true)" class="btn">Select All</button> ';
-echo '<button type="button" onclick="toggleAll(false)" class="btn">Deselect All</button>';
-echo '</div>';
+echo '<div style="margin-bottom: 10px;">
+        <button type="button" onclick="toggleAll(true)" class="btn">Select All</button> 
+        <button type="button" onclick="toggleAll(false)" class="btn">Deselect All</button>
+      </div>';
 
-$res = Sql_Query("SELECT * FROM Draft_Multiplier_Data ORDER BY name ASC");
+$res = Sql_Query("SELECT id, name, email, footer FROM Draft_Multiplier_Data ORDER BY name ASC");
 echo '<table class="common" style="width: 100%;">
-        <thead><tr><th width="30"></th><th>Name (Subject Prefix)</th><th>Email (From Line)</th><th>Footer Preview</th></tr></thead>
+        <thead><tr><th width="30"></th><th>Name</th><th>Email</th><th>Footer Preview</th></tr></thead>
         <tbody>';
 
 if (Sql_Affected_Rows($res)) {
     while ($row = Sql_Fetch_Assoc($res)) {
-        $footer_preview = htmlspecialchars(substr($row['footer'], 0, 60)) . (strlen($row['footer']) > 60 ? '...' : '');
+        $preview = htmlspecialchars(substr($row['footer'], 0, 50)) . (strlen($row['footer']) > 50 ? '...' : '');
         echo "<tr>
                 <td><input type='checkbox' name='selected_ids[]' value='{$row['id']}' class='rec-check'></td>
                 <td><strong>" . htmlspecialchars($row['name']) . "</strong></td>
                 <td>" . htmlspecialchars($row['email']) . "</td>
-                <td><small style='color: #666;'>" . $footer_preview . "</small></td>
+                <td><small style='color:#666;'>" . $preview . "</small></td>
               </tr>";
     }
 } else {
-    echo "<tr><td colspan='4'>No recipients found. Please add them in 'Manage Recipients' first.</td></tr>";
+    echo "<tr><td colspan='4'>No data found in Draft_Multiplier_Data table.</td></tr>";
 }
 echo '</tbody></table>';
 
-echo '<br><div style="text-align: right; border-top: 1px solid #eee; padding-top: 20px;">';
-echo '<input type="submit" name="run_multiplier" value="Generate Personalized Drafts" class="btn btn-primary" style="font-size: 1.1em; padding: 10px 25px;">';
-echo '</div>';
+echo '<br><input type="submit" name="run_multiplier" value="Generate Personalized Drafts" class="btn btn-primary" style="padding: 10px 20px; cursor: pointer;">';
 echo '</div></div></form>';
 
-// JavaScript für Select/Deselect All
-echo "
-<script>
+echo "<script>
 function toggleAll(source) {
     var checkboxes = document.getElementsByClassName('rec-check');
-    for(var i=0; i<checkboxes.length; i++) {
-        checkboxes[i].checked = source;
-    }
+    for(var i=0; i<checkboxes.length; i++) { checkboxes[i].checked = source; }
 }
-</script>";
-
-echo '</div>';
+</script></div>";
