@@ -9,8 +9,8 @@ class DraftMultiplier extends phplistPlugin
     public $description = 'Pro tool to duplicate campaign drafts with individual personalization.';
 
     public $topMenuLinks = array(
-        'multiplier' => array('category' => 'system'),
-        'manage'     => array('category' => 'system'),
+        'multiplier' => array('category' => 'campaigns'),
+        'manage'     => array('category' => 'campaigns'),
     );
 
     public $pageTitles = array(
