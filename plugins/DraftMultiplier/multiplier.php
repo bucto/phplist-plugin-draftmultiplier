@@ -8,7 +8,6 @@ if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id']))
     $draft_id = (int)$_POST['draft_id'];
     $selected_ids = $_POST['selected_ids']; 
     
-    // Original laden
     $original = Sql_Fetch_Assoc_Query(sprintf('SELECT * FROM %s WHERE id = %d', $GLOBALS['tables']['message'], $draft_id));
     
     if ($original) {
@@ -17,32 +16,30 @@ if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id']))
             $data = Sql_Fetch_Assoc_Query(sprintf("SELECT name, email, footer FROM Draft_Multiplier_Data WHERE id = %d", (int)$id));
             
             if ($data) {
-                // Felder vorbereiten basierend auf deiner Tabellenstruktur
-                $newSubject = sql_escape($data['name'] . " - " . $original['subject']);
-                $newFrom = sql_escape($data['name'] . ' <' . $data['email'] . '>');
-                $footerContent = $data['footer'];
+                // 1. Betreff umdrehen: Erst Vorlage, dann Name
+                $newSubject = sql_escape($original['subject'] . " - " . $data['name']);
                 
-                // HTML oder Text?
+                // 2. Fromfield nur mit der E-Mail-Adresse
+                $newFrom = sql_escape($data['email']);
+                
+                // 3. Inhalt vorbereiten
+                $footerContent = $data['footer'];
                 $isHtml = ($original['htmlformatted'] == 1);
-                if ($isHtml) {
-                    $newMessage = sql_escape($original['message'] . '<br><br><hr><br>' . nl2br(htmlspecialchars($footerContent)));
-                    $newTextMessage = sql_escape($original['textmessage'] . "\n\n---\n" . $footerContent);
-                } else {
-                    $newMessage = sql_escape($original['message'] . "\n\n---\n" . $footerContent);
-                    $newTextMessage = $newMessage;
-                }
+                
+                // Wir schreiben die Personalisierung in das Tabellenfeld 'footer' 
+                // und lassen 'message' und 'textmessage' als Kopie des Originals
+                $newFooter = sql_escape($footerContent);
 
-                // INSERT INTO ... SELECT (angepasst an DEINE Spalten)
+                // INSERT INTO ... SELECT
                 $query = sprintf(
                     'INSERT INTO %s 
                     (uuid, subject, fromfield, tofield, replyto, message, textmessage, footer, entered, modified, embargo, repeatinterval, repeatuntil, status, htmlformatted, sendformat, template, owner) 
-                    SELECT UUID(), "%s", "%s", tofield, replyto, "%s", "%s", footer, NOW(), NOW(), NOW(), 0, NOW(), "draft", htmlformatted, sendformat, template, owner 
+                    SELECT UUID(), "%s", "%s", tofield, replyto, message, textmessage, "%s", NOW(), NOW(), NOW(), 0, NOW(), "draft", htmlformatted, sendformat, template, owner 
                     FROM %s WHERE id = %d',
                     $GLOBALS['tables']['message'],
                     $newSubject, 
                     $newFrom, 
-                    $newMessage,
-                    $newTextMessage,
+                    $newFooter,
                     $GLOBALS['tables']['message'], 
                     $draft_id
                 );
