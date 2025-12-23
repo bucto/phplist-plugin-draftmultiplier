@@ -3,7 +3,7 @@
 class DraftMultiplier extends phplistPlugin
 {
     public $name = 'DraftMultiplier';
-    public $version = '1.1.11';
+    public $version = '1.1.12';
     public $authors = 'bucto';
     public $enabled = true;
     public $description = 'Pro tool to duplicate campaign drafts with individual personalization.';
@@ -12,11 +12,11 @@ class DraftMultiplier extends phplistPlugin
     public $topMenuLinks = array(
         'multiplier' => array(
             'category' => 'campaigns',
-            'min_auth' => 0,    // Sichtbarkeit im Menü für alle Admins
+            'min_auth' => 0, 
         ),
         'manage'     => array(
             'category' => 'campaigns',
-            'min_auth' => 0,    // Sichtbarkeit im Menü für alle Admins
+            'min_auth' => 0,
         ),
     );
 
@@ -31,10 +31,16 @@ class DraftMultiplier extends phplistPlugin
         parent::__construct();
     }
 
-    /**
-     * Erlaubt den Zugriff auf die Seiten für alle Administratoren.
-     * Ohne diese Funktion könnten nur Superuser die Seiten tatsächlich öffnen.
-     */
+    // WICHTIG: Diese Funktion überschreibt die Standardprüfung von phpList
+    function adminAllowed($page)
+    {
+        if ($page == 'multiplier' || $page == 'manage') {
+            return true;
+        }
+        return parent::adminAllowed($page);
+    }
+
+    // Zusätzliche Absicherung für den Seitenaufruf
     function allowAccess($page)
     {
         if ($page == 'multiplier' || $page == 'manage') {
