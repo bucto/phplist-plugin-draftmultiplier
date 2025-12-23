@@ -10,8 +10,14 @@ class DraftMultiplier extends phplistPlugin
     public $documentationUrl = 'https://github.com/bucto/phplist-plugin-draftmultiplier';
 
     public $topMenuLinks = array(
-        'multiplier' => array('category' => 'campaigns'),
-        'manage'     => array('category' => 'campaigns'),
+        'multiplier' => array(
+            'category' => 'campaigns',
+            'min_auth' => 0,    // Sichtbarkeit im Menü für alle Admins
+        ),
+        'manage'     => array(
+            'category' => 'campaigns',
+            'min_auth' => 0,    // Sichtbarkeit im Menü für alle Admins
+        ),
     );
 
     public $pageTitles = array(
@@ -21,9 +27,20 @@ class DraftMultiplier extends phplistPlugin
 
     function __construct()
     {
-        // Wir stellen sicher, dass der Pfad absolut korrekt aufgelöst wird
         $this->coderoot = dirname(__FILE__) . '/DraftMultiplier/';
         parent::__construct();
+    }
+
+    /**
+     * Erlaubt den Zugriff auf die Seiten für alle Administratoren.
+     * Ohne diese Funktion könnten nur Superuser die Seiten tatsächlich öffnen.
+     */
+    function allowAccess($page)
+    {
+        if ($page == 'multiplier' || $page == 'manage') {
+            return true;
+        }
+        return parent::allowAccess($page);
     }
 
     function initialise()
