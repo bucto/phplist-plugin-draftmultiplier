@@ -3,11 +3,12 @@
 class DraftMultiplier extends phplistPlugin
 {
     public $name = 'DraftMultiplier';
-    public $version = '1.1.9';
+    public $version = '1.1.10';
     public $authors = 'bucto';
     public $enabled = true;
     public $description = 'Pro tool to duplicate campaign drafts with individual personalization.';
-	public $documentationUrl = 'https://github.com/bucto/phplist-plugin-draftmultiplier';
+    public $documentationUrl = 'https://github.com/bucto/phplist-plugin-draftmultiplier';
+
     public $topMenuLinks = array(
         'multiplier' => array('category' => 'campaigns'),
         'manage'     => array('category' => 'campaigns'),
@@ -20,6 +21,7 @@ class DraftMultiplier extends phplistPlugin
 
     function __construct()
     {
+        // Wir stellen sicher, dass der Pfad absolut korrekt aufgelöst wird
         $this->coderoot = dirname(__FILE__) . '/DraftMultiplier/';
         parent::__construct();
     }
