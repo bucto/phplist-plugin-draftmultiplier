@@ -16,21 +16,14 @@ if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id']))
             $data = Sql_Fetch_Assoc_Query(sprintf("SELECT name, email, footer FROM Draft_Multiplier_Data WHERE id = %d", (int)$id));
             
             if ($data) {
-                // 1. Betreff umdrehen: Erst Vorlage, dann Name
+                // Betreff: Erst Vorlage, dann Name
                 $newSubject = sql_escape($original['subject'] . " - " . $data['name']);
-                
-                // 2. Fromfield nur mit der E-Mail-Adresse
+                // Fromfield: Nur Email
                 $newFrom = sql_escape($data['email']);
-                
-                // 3. Inhalt vorbereiten
-                $footerContent = $data['footer'];
-                $isHtml = ($original['htmlformatted'] == 1);
-                
-                // Wir schreiben die Personalisierung in das Tabellenfeld 'footer' 
-                // und lassen 'message' und 'textmessage' als Kopie des Originals
-                $newFooter = sql_escape($footerContent);
+                // Footer: Inhalt aus Tabelle
+                $newFooter = sql_escape($data['footer']);
 
-                // INSERT INTO ... SELECT
+                // INSERT INTO ... SELECT basierend auf deinem SQL-Dump
                 $query = sprintf(
                     'INSERT INTO %s 
                     (uuid, subject, fromfield, tofield, replyto, message, textmessage, footer, entered, modified, embargo, repeatinterval, repeatuntil, status, htmlformatted, sendformat, template, owner) 
@@ -52,7 +45,7 @@ if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id']))
     }
 }
 
-// --- FORMULAR ---
+// --- ANZEIGE: FORMULAR ---
 $drafts = Sql_Query(sprintf('SELECT id, subject FROM %s WHERE status = "draft" ORDER BY id DESC LIMIT 50', $GLOBALS['tables']['message']));
 $recipients = Sql_Query("SELECT id, name, email FROM Draft_Multiplier_Data ORDER BY name ASC");
 
@@ -65,18 +58,39 @@ echo '<form method="post">
         }
 echo '  </select>
     </div></div>
+    
     <div class="panel"><div class="content">
         <h3>2. Select Recipients</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <button type="button" class="button" onclick="toggleAll(true)">Select All</button>
+            <button type="button" class="button" onclick="toggleAll(false)">Deselect All</button>
+        </div>
+
         <table class="common" style="width:100%;">
-            <thead><tr><th width="30"></th><th>Name</th><th>Email</th></tr></thead><tbody>';
+            <thead><tr><th width="30"></th><th>Name</th><th>Email</th></tr></thead>
+            <tbody>';
             while($r = Sql_Fetch_Assoc($recipients)) {
                 echo "<tr>
-                    <td><input type='checkbox' name='selected_ids[]' value='{$r['id']}'></td>
+                    <td><input type='checkbox' name='selected_ids[]' value='{$r['id']}' class='recipient-checkbox'></td>
                     <td>".htmlspecialchars($r['name'])."</td>
                     <td>".htmlspecialchars($r['email'])."</td>
                 </tr>";
             }
-echo '  </tbody></table>
+echo '      </tbody>
+        </table>
         <br><input type="submit" name="run_multiplier" value="Generate Personalized Drafts" class="btn btn-primary" style="padding:10px 20px;">
     </div></div>
-</form></div>';
+</form>';
+
+// JavaScript für die "Alle auswählen" Logik
+echo '
+<script type="text/javascript">
+function toggleAll(selectAll) {
+    var checkboxes = document.querySelectorAll(".recipient-checkbox");
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = selectAll;
+    }
+}
+</script>
+</div>';
