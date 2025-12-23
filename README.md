@@ -1,4 +1,4 @@
-# phpList DraftMultiplier Pro
+# phpList DraftMultiplier
 
 A powerful **phpList** plugin designed to rapidly duplicate a base campaign draft for multiple recipients while personalizing the subject line and footer.
 
