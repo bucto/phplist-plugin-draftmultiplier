@@ -3,7 +3,7 @@ if (!defined('PHPLISTINIT')) die();
 
 echo '<div class="container-fluid"><h1>Draft Multiplier: Create Copies</h1>';
 
-// --- LOGIK: KOPIEREN ---
+// --- LOGIK ---
 if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id'])) {
     $draft_id = (int)$_POST['draft_id'];
     $selected_ids = $_POST['selected_ids']; 
@@ -23,7 +23,7 @@ if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id']))
                 // Footer: Inhalt aus Tabelle
                 $newFooter = sql_escape($data['footer']);
 
-                // INSERT INTO ... SELECT basierend auf deinem SQL-Dump
+                // INSERT INTO
                 $query = sprintf(
                     'INSERT INTO %s 
                     (uuid, subject, fromfield, tofield, replyto, message, textmessage, footer, entered, modified, embargo, repeatinterval, repeatuntil, status, htmlformatted, sendformat, template, owner) 
@@ -45,7 +45,7 @@ if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id']))
     }
 }
 
-// --- ANZEIGE: FORMULAR ---
+// --- FORMULAR ---
 $drafts = Sql_Query(sprintf('SELECT id, subject FROM %s WHERE status = "draft" ORDER BY id DESC LIMIT 50', $GLOBALS['tables']['message']));
 $recipients = Sql_Query("SELECT id, name, email FROM Draft_Multiplier_Data ORDER BY name ASC");
 
@@ -83,7 +83,7 @@ echo '      </tbody>
     </div></div>
 </form>';
 
-// JavaScript für die "Alle auswählen" Logik
+// JavaScript
 echo '
 <script type="text/javascript">
 function toggleAll(selectAll) {
