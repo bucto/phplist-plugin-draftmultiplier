@@ -4,18 +4,18 @@ if (!defined('PHPLISTINIT')) die();
 $msg = '';
 $edit_entry = null;
 
-// --- LOGIK: EINTRAG LÖSCHEN ---
+// --- LOGIC: DELETE ENTRY ---
 if (isset($_GET['delete'])) {
     Sql_Query("DELETE FROM Draft_Multiplier_Data WHERE id = " . intval($_GET['delete']));
     $msg = '<div class="note">Entry deleted.</div>';
 }
 
-// --- LOGIK: EINTRAG LADEN FÜR EDIT ---
+// --- LOGIC: LOAD ENTRY FOR EDITING ---
 if (isset($_GET['edit'])) {
     $edit_entry = Sql_Fetch_Assoc_Query("SELECT * FROM Draft_Multiplier_Data WHERE id = " . intval($_GET['edit']));
 }
 
-// --- LOGIK: SPEICHERN (NEU ODER UPDATE) ---
+// --- LOGIC: SAVE (NEW OR UPDATE) ---
 if (isset($_POST['save_entry'])) {
     $name = sql_escape($_POST['name']);
     $email = sql_escape($_POST['email']);
@@ -23,27 +23,27 @@ if (isset($_POST['save_entry'])) {
     $id = intval($_POST['entry_id']);
 
     if ($id > 0) {
-        // UPDATE
+        // UPDATE EXISTING RECORD
         Sql_Query(sprintf(
             "UPDATE Draft_Multiplier_Data SET name = '%s', email = '%s', footer = '%s' WHERE id = %d",
             $name, $email, $footer, $id
         ));
         $msg = '<div class="note">Entry updated successfully.</div>';
     } else {
-        // INSERT
+        // INSERT NEW RECORD
         Sql_Query(sprintf(
             "INSERT INTO Draft_Multiplier_Data (name, email, footer) VALUES ('%s', '%s', '%s')",
             $name, $email, $footer
         ));
         $msg = '<div class="note">New entry added successfully.</div>';
     }
-    $edit_entry = null; // Formular nach Speichern leeren
+    $edit_entry = null; // Clear form after saving
 }
 
 echo '<div class="container-fluid"><h1>Manage Recipient Data</h1>';
 echo $msg;
 
-// --- FORMULAR: HINZUFÜGEN / EDITIEREN ---
+// --- FORM: ADD / EDIT ---
 $form_title = $edit_entry ? 'Edit Recipient' : 'Add New Recipient';
 $btn_label = $edit_entry ? 'Update Entry' : 'Add to List';
 $val_name = $edit_entry ? htmlspecialchars($edit_entry['name']) : '';
@@ -61,7 +61,7 @@ echo '<form method="post" action="./?page=manage&pi=DraftMultiplier">
     if ($edit_entry) echo '<a href="./?page=manage&pi=DraftMultiplier" class="btn">Cancel</a>';
 echo '</form></div></div>';
 
-// --- LISTE: ANZEIGEN ---
+// --- LIST: DISPLAY ENTRIES ---
 echo '<div class="panel"><div class="content"><h3>Existing Entries</h3>';
 $res = Sql_Query("SELECT * FROM Draft_Multiplier_Data ORDER BY name ASC");
 echo '<table class="common">
@@ -79,6 +79,7 @@ while ($row = Sql_Fetch_Assoc($res)) {
 }
 echo '</table></div></div></div>';
 
+// --- FOOTER INFO ---
 echo '<hr><div style="text-align: center; color: #666; font-size: 0.9em; padding: 20px;">';
 echo 'Plugin developed by <strong>Thomas Bücken</strong> | ';
 echo '<a href="https://github.com/bucto/phplist-plugin-draftmultiplier" target="_blank" style="text-decoration: none; color: #007bff;">GitHub Project Page</a>';
