@@ -3,27 +3,29 @@ if (!defined('PHPLISTINIT')) die();
 
 echo '<div class="container-fluid"><h1>Draft Multiplier: Create Copies</h1>';
 
-// --- LOGIK ---
+// --- LOGIC: PROCESS MULTIPLICATION ---
 if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id'])) {
     $draft_id = (int)$_POST['draft_id'];
     $selected_ids = $_POST['selected_ids']; 
     
+    // Fetch the base campaign draft
     $original = Sql_Fetch_Assoc_Query(sprintf('SELECT * FROM %s WHERE id = %d', $GLOBALS['tables']['message'], $draft_id));
     
     if ($original) {
         $count = 0;
         foreach ($selected_ids as $id) {
+            // Fetch personalized data for each selected recipient
             $data = Sql_Fetch_Assoc_Query(sprintf("SELECT name, email, footer FROM Draft_Multiplier_Data WHERE id = %d", (int)$id));
             
             if ($data) {
-                // Betreff: Erst Vorlage, dann Name
+                // Subject: Base subject + Recipient Name
                 $newSubject = sql_escape($original['subject'] . " - " . $data['name']);
-                // Fromfield: Nur Email
+                // From Field: Use personalized email
                 $newFrom = sql_escape($data['email']);
-                // Footer: Inhalt aus Tabelle
+                // Footer: Use personalized footer text
                 $newFooter = sql_escape($data['footer']);
 
-                // INSERT INTO
+                // INSERT: Create a new draft record by copying the original and injecting personal data
                 $query = sprintf(
                     'INSERT INTO %s 
                     (uuid, subject, fromfield, tofield, replyto, message, textmessage, footer, entered, modified, embargo, repeatinterval, repeatuntil, status, htmlformatted, sendformat, template, owner) 
@@ -45,8 +47,10 @@ if (isset($_POST['run_multiplier'], $_POST['selected_ids'], $_POST['draft_id']))
     }
 }
 
-// --- FORMULAR ---
+// --- UI: RENDER FORM ---
+// Fetch latest 50 drafts
 $drafts = Sql_Query(sprintf('SELECT id, subject FROM %s WHERE status = "draft" ORDER BY id DESC LIMIT 50', $GLOBALS['tables']['message']));
+// Fetch all recipient data entries
 $recipients = Sql_Query("SELECT id, name, email FROM Draft_Multiplier_Data ORDER BY name ASC");
 
 echo '<form method="post">
@@ -83,7 +87,7 @@ echo '      </tbody>
     </div></div>
 </form>';
 
-// JavaScript
+// --- JAVASCRIPT: HELPER FUNCTIONS ---
 echo '
 <script type="text/javascript">
 function toggleAll(selectAll) {
@@ -95,6 +99,7 @@ function toggleAll(selectAll) {
 </script>
 </div>';
 
+// --- FOOTER INFO ---
 echo '<hr><div style="text-align: center; color: #666; font-size: 0.9em; padding: 20px;">';
 echo 'Plugin developed by <strong>Thomas Bücken</strong> | ';
 echo '<a href="https://github.com/bucto/phplist-plugin-draftmultiplier" target="_blank" style="text-decoration: none; color: #007bff;">GitHub Project Page</a>';
